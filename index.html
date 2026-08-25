@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cached HTML Pages Viewer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      background-color: #1a1a1a;
+      color: #e0e0e0;
+      overflow: hidden;
+    }
+    /* Sidebar */
+    .sidebar {
+      width: 320px;
+      background-color: #242424;
+      border-right: 1px solid #333;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid #333;
+      background-color: #1f1f1f;
+    }
+    .sidebar-header h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+    .search-box {
+      width: 100%;
+      padding: 8px 12px;
+      background-color: #141414;
+      border: 1px solid #3d3d3d;
+      border-radius: 6px;
+      color: #ffffff;
+      font-size: 13px;
+      outline: none;
+    }
+    .search-box:focus {
+      border-color: #007acc;
+    }
+    .file-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 8px;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #888888;
+      padding: 12px 8px 6px 8px;
+    }
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      color: #cccccc;
+      text-decoration: none;
+      margin-bottom: 2px;
+      transition: background-color 0.15s ease;
+    }
+    .file-item:hover {
+      background-color: #333333;
+      color: #ffffff;
+    }
+    .file-item.active {
+      background-color: #0e639c;
+      color: #ffffff;
+      font-weight: 500;
+    }
+    .file-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .open-external {
+      font-size: 11px;
+      color: #888888;
+      text-decoration: none;
+      margin-left: 8px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #444;
+      flex-shrink: 0;
+    }
+    .open-external:hover {
+      background-color: #444;
+      color: #fff;
+    }
+
+    /* Main View Area */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background-color: #111;
+    }
+    .view-header {
+      padding: 10px 16px;
+      background-color: #1f1f1f;
+      border-bottom: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+    .current-path {
+      font-family: monospace;
+      color: #4ec9b0;
+    }
+    .iframe-container {
+      flex: 1;
+      position: relative;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background-color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>Cached HTML Pages</h2>
+      <input type="text" id="file-search" class="search-box" placeholder="Filter files (e.g. book-10)...">
+    </div>
+    <div class="file-list" id="file-list">
+      <div class="section-title">Catalogue Pages</div>
+      <div id="catalogue-files"></div>
+
+      <div class="section-title">Book Pages</div>
+      <div id="book-files"></div>
+    </div>
+  </aside>
+
+  <!-- Main View Area -->
+  <main class="main-content">
+    <div class="view-header">
+      <div>Viewing: <span class="current-path" id="current-path">Select a file from the sidebar</span></div>
+      <a href="#" id="external-link" target="_blank" class="open-external" style="display: none;">Open directly in new tab ↗</a>
+    </div>
+    <div class="iframe-container">
+      <iframe id="page-viewer" src="about:blank"></iframe>
+    </div>
+  </main>
+
+  <script>
+    // Cached files configuration
+    const cataloguePages = [
+      { name: "catalogue-page-1.html", path: "cache/catalogue/catalogue-page-1.html" },
+      { name: "catalogue-page-2.html", path: "cache/catalogue/catalogue-page-2.html" },
+      { name: "catalogue-page-3.html", path: "cache/catalogue/catalogue-page-3.html" }
+    ];
+
+    const bookPages = [];
+    for (let i = 1; i <= 60; i++) {
+      bookPages.push({
+        name: `book-${i}.html`,
+        path: `cache/books/book-${i}.html`
+      });
+    }
+
+    const catalogueContainer = document.getElementById("catalogue-files");
+    const bookContainer = document.getElementById("book-files");
+    const searchInput = document.getElementById("file-search");
+    const iframe = document.getElementById("page-viewer");
+    const currentPathEl = document.getElementById("current-path");
+    const externalLinkEl = document.getElementById("external-link");
+
+    function renderList() {
+      const query = searchInput.value.toLowerCase().trim();
+
+      // Render Catalogue Pages
+      catalogueContainer.innerHTML = cataloguePages
+        .filter(f => f.name.toLowerCase().includes(query))
+        .map(f => `
+          <div class="file-item" data-path="${f.path}">
+            <span class="file-name">📄 ${f.name}</span>
+            <a href="${f.path}" target="_blank" class="open-external" onclick="event.stopPropagation()">↗</a>
+          </div>
+        `).join("");
+
+      // Render Book Pages
+      bookContainer.innerHTML = bookPages
+        .filter(f => f.name.toLowerCase().includes(query))
+        .map(f => `
+          <div class="file-item" data-path="${f.path}">
+            <span class="file-name">📘 ${f.name}</span>
+            <a href="${f.path}" target="_blank" class="open-external" onclick="event.stopPropagation()">↗</a>
+          </div>
+        `).join("");
+
+      attachClickEvents();
+    }
+
+    function selectFile(filePath) {
+      document.querySelectorAll(".file-item").forEach(el => {
+        el.classList.toggle("active", el.dataset.path === filePath);
+      });
+
+      iframe.src = filePath;
+      currentPathEl.textContent = filePath;
+      externalLinkEl.href = filePath;
+      externalLinkEl.style.display = "inline-block";
+    }
+
+    function attachClickEvents() {
+      document.querySelectorAll(".file-item").forEach(el => {
+        el.addEventListener("click", () => {
+          selectFile(el.dataset.path);
+        });
+      });
+    }
+
+    searchInput.addEventListener("input", renderList);
+
+    // Initial render
+    renderList();
+
+    // Default select first catalogue page
+    if (cataloguePages.length > 0) {
+      selectFile(cataloguePages[0].path);
+    }
+  </script>
+</body>
+</html>

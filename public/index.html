@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Polite Scraper - Cache Files Browser</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="logo-icon">📂</div>
+        <div>
+          <h1>Polite Scraper Cache Browser</h1>
+          <p class="subtitle">Inspect cached HTML files & scraped datasets</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="refresh-btn" class="btn btn-secondary">
+          <span class="icon">🔄</span> Refresh Cache Data
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" data-tab="overview">
+        📊 Overview
+      </button>
+      <button class="tab-btn" data-tab="catalogue">
+        📄 Catalogue Cache (<span id="tab-catalogue-count">0</span>)
+      </button>
+      <button class="tab-btn" data-tab="books-cache">
+        📚 Book HTML Cache (<span id="tab-books-count">0</span>)
+      </button>
+      <button class="tab-btn" data-tab="scraped-data">
+        ✨ Parsed Dataset (<span id="tab-parsed-count">0</span>)
+      </button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content-area">
+      <!-- TAB 1: OVERVIEW -->
+      <section id="tab-overview" class="tab-content active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon purple">📑</div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-catalogue-count">0</span>
+              <span class="stat-label">Catalogue Pages Cached</span>
+            </div>
+            <div class="stat-foot" id="stat-catalogue-size">0 KB</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon blue">📘</div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-book-cache-count">0</span>
+              <span class="stat-label">Book HTML Files Cached</span>
+            </div>
+            <div class="stat-foot" id="stat-book-cache-size">0 MB</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green">✨</div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-parsed-count">0</span>
+              <span class="stat-label">Parsed Books in JSON</span>
+            </div>
+            <div class="stat-foot">output/books.json</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon orange">💾</div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-total-size">0 MB</span>
+              <span class="stat-label">Total Cache Disk Space</span>
+            </div>
+            <div class="stat-foot" id="stat-total-files">0 Total Files</div>
+          </div>
+        </div>
+
+        <div class="overview-details-grid">
+          <div class="panel">
+            <h2>Cache Directory Structure</h2>
+            <div class="dir-tree">
+              <div class="tree-node root">📂 cache/</div>
+              <div class="tree-node child">├── 📁 catalogue/ <span class="badge badge-purple" id="tree-catalogue-info">3 files</span></div>
+              <div class="tree-node child-2">│   ├── catalogue-page-1.html</div>
+              <div class="tree-node child-2">│   ├── catalogue-page-2.html</div>
+              <div class="tree-node child-2">│   └── catalogue-page-3.html</div>
+              <div class="tree-node child">└── 📁 books/ <span class="badge badge-blue" id="tree-books-info">60 files</span></div>
+              <div class="tree-node child-2">    ├── book-1.html</div>
+              <div class="tree-node child-2">    ├── book-2.html ... book-60.html</div>
+              <div class="tree-node root" style="margin-top: 12px;">📂 output/</div>
+              <div class="tree-node child">└── 📄 books.json <span class="badge badge-green">114 KB</span></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>Cache Efficiency & Status</h2>
+            <div class="info-list">
+              <div class="info-item">
+                <span class="label">Target Website:</span>
+                <span class="val"><a href="https://books.toscrape.com/" target="_blank" rel="noopener">books.toscrape.com</a></span>
+              </div>
+              <div class="info-item">
+                <span class="label">Catalogue Scope:</span>
+                <span class="val">Pages 1 to 3</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Cache Policy:</span>
+                <span class="val">Local HTML File Cache</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Cache Hit Ratio:</span>
+                <span class="val highlight-green">100% (Subsequent runs hit local cache)</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Data Validation:</span>
+                <span class="val highlight-blue">Strict Zod Schema</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: CATALOGUE CACHE -->
+      <section id="tab-catalogue" class="tab-content">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Cached Catalogue Pages</h2>
+            <p>Raw HTML files downloaded for catalogue listing pages</p>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Filename</th>
+                  <th>Relative Path</th>
+                  <th>File Size</th>
+                  <th>Last Modified</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="catalogue-table-body">
+                <tr><td colspan="5" class="text-center">Loading catalogue cache...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: BOOK HTML CACHE -->
+      <section id="tab-books-cache" class="tab-content">
+        <div class="panel">
+          <div class="panel-header flex-header">
+            <div>
+              <h2>Cached Book HTML Files</h2>
+              <p>Individual cached HTML files for scraped book pages</p>
+            </div>
+            <div class="filter-controls">
+              <input type="text" id="book-cache-search" placeholder="Search filename (e.g. book-1)..." class="search-input">
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Filename</th>
+                  <th>Relative Path</th>
+                  <th>File Size</th>
+                  <th>Last Modified</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="books-cache-table-body">
+                <tr><td colspan="5" class="text-center">Loading book cache files...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: SCRAPED DATA -->
+      <section id="tab-scraped-data" class="tab-content">
+        <div class="panel">
+          <div class="panel-header flex-header">
+            <div>
+              <h2>Parsed Book Dataset</h2>
+              <p>Extracted data from <code>output/books.json</code></p>
+            </div>
+            <div class="filter-controls">
+              <input type="text" id="parsed-search" placeholder="Search title or description..." class="search-input">
+              <select id="parsed-rating-filter" class="select-input">
+                <option value="">All Ratings</option>
+                <option value="5">⭐⭐⭐⭐⭐ (5 Stars)</option>
+                <option value="4">⭐⭐⭐⭐ (4 Stars)</option>
+                <option value="3">⭐⭐⭐ (3 Stars)</option>
+                <option value="2">⭐⭐ (2 Stars)</option>
+                <option value="1">⭐ (1 Star)</option>
+              </select>
+              <select id="parsed-sort" class="select-input">
+                <option value="default">Default Order</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+                <option value="rating-desc">Rating: High to Low</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="parsed-books-grid" class="books-grid">
+            <div class="loading-spinner">Loading parsed books data...</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal Viewer -->
+    <div id="viewer-modal" class="modal-overlay hidden">
+      <div class="modal-container">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-icon">📄</span>
+            <h3 id="modal-filename">File Viewer</h3>
+            <span id="modal-filesize" class="badge badge-gray">0 KB</span>
+          </div>
+          <div class="modal-mode-toggle">
+            <button id="modal-mode-rendered" class="mode-btn active">Rendered Preview</button>
+            <button id="modal-mode-raw" class="mode-btn">Raw HTML</button>
+          </div>
+          <button id="modal-close-btn" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="modal-rendered-view" class="modal-view">
+            <iframe id="modal-iframe" src="about:blank"></iframe>
+          </div>
+          <div id="modal-raw-view" class="modal-view hidden">
+            <pre><code id="modal-code">Loading...</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
